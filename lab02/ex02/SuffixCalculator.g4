@@ -2,24 +2,26 @@ grammar SuffixCalculator;
 
 program: stat* EOF;
 
-stat: expr NEWLINE {
+stat:
+	expr NEWLINE {
         System.out.println("Result: " + $expr.res);
     }
-    | NEWLINE;
+	| NEWLINE;
 
-expr returns [double res]:
-    e1=expr e2=expr op = ('*' | '/' | '+' | '-') {
+expr
+	returns[double res = 0.0]:
+	e1 = expr e2 = expr op = ('*' | '/' | '+' | '-') {
         switch ($op.text) {
             case "+":
-                $res += $e1.res + $e2.res;
+                $res = $e1.res + $e2.res;
                 break;
 
             case "-":
-                $res += $e1.res - $e2.res;
+                $res = $e1.res - $e2.res;
                 break;
 
             case "*":
-                $res += $e1.res * $e2.res;
+                $res = $e1.res * $e2.res;
                 break;
 
             case "/":
@@ -27,14 +29,13 @@ expr returns [double res]:
                     System.err.println("Division by 0 not possible");
                     System.exit(1);
                 }
-                $res += $e1.res / $e2.res;
+                $res = $e1.res / $e2.res;
                 break;
         }
     }
-    | Number {
+	| Number {
         $res = Double.parseDouble($Number.text);
-    }
-    ;
+    };
 
 Number: [0-9]+ ('.' [0-9]+)?;
 NEWLINE: '\r'? '\n';
