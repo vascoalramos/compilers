@@ -5,7 +5,7 @@ Compilers | UA 2018/2019
 1. ANTLR-4
 2. Scripts in folder [antlr4-bin-v5.4](antlr4-bin-v5.4)
 
-## Usefull ANTLR-v4 + bash commands (from custom scripts)
+## Useful ANTLR-v4 + bash commands (from custom scripts)
 * **antlr4:** compiles ANTLR-v4 grammars
 * **antlr4-test:** allows for debug operations in your grammars
 * **antlr4-clean:** removes all ANTLR-v4 automatically generated files
