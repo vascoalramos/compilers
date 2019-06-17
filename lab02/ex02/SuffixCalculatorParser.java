@@ -208,7 +208,7 @@ public class SuffixCalculatorParser extends Parser {
 	}
 
 	public static class ExprContext extends ParserRuleContext {
-		public double res;
+		public double res = 0.0;
 		public ExprContext e1;
 		public Token Number;
 		public ExprContext e2;
@@ -289,15 +289,15 @@ public class SuffixCalculatorParser extends Parser {
 
 					                  switch ((((ExprContext)_localctx).op!=null?((ExprContext)_localctx).op.getText():null)) {
 					                      case "+":
-					                          _localctx.res += ((ExprContext)_localctx).e1.res + ((ExprContext)_localctx).e2.res;
+					                          ((ExprContext)_localctx).res =  ((ExprContext)_localctx).e1.res + ((ExprContext)_localctx).e2.res;
 					                          break;
 
 					                      case "-":
-					                          _localctx.res += ((ExprContext)_localctx).e1.res - ((ExprContext)_localctx).e2.res;
+					                          ((ExprContext)_localctx).res =  ((ExprContext)_localctx).e1.res - ((ExprContext)_localctx).e2.res;
 					                          break;
 
 					                      case "*":
-					                          _localctx.res += ((ExprContext)_localctx).e1.res * ((ExprContext)_localctx).e2.res;
+					                          ((ExprContext)_localctx).res =  ((ExprContext)_localctx).e1.res * ((ExprContext)_localctx).e2.res;
 					                          break;
 
 					                      case "/":
@@ -305,7 +305,7 @@ public class SuffixCalculatorParser extends Parser {
 					                              System.err.println("Division by 0 not possible");
 					                              System.exit(1);
 					                          }
-					                          _localctx.res += ((ExprContext)_localctx).e1.res / ((ExprContext)_localctx).e2.res;
+					                          ((ExprContext)_localctx).res =  ((ExprContext)_localctx).e1.res / ((ExprContext)_localctx).e2.res;
 					                          break;
 					                  }
 					              
