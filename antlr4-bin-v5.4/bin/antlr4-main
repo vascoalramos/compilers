@@ -1,0 +1,314 @@
+#!/bin/bash
+#
+# Miguel Oliveira e Silva, 2017-2019
+
+if (( $# == 0 )); then
+  echo "Usage: antlr4-main [options] <GrammarName> <mainRule>"
+  echo ""
+  echo "   Creates a java's main class to parse GrammarName starting at rule mainRule."
+  echo ""
+  echo "   options:"
+  echo "       -l <ListenerFile>"
+  echo "       -listener <ListenerFile>"
+  echo "           main created with support for traversing the given listener class"
+  echo "           multiple listeners are allowed (the order will be respected)"
+  echo "       -v <VisitorFile>"
+  echo "       -visitor <VisitorFile>"
+  echo "           main created with support for visiting the given visitor class"
+  echo "           multiple visitors are allowed (the order will be respected)"
+  echo "       -i"
+  echo "       -line-interactive"
+  echo "           main created for a line interactive interpreter"
+  echo "       -is <Separator>"
+  echo "       -separator-interactive <Separator>"
+  echo "           main created for a text separated interactive parser"
+  echo "       -f"
+  echo "       -force"
+  echo "           force creation of main file even if grammar, rule, listeners, and visitor don't exist,"
+  echo "           or if main file already exists"
+  echo ""
+  exit 1;
+fi
+
+grammar=""
+grammarfile=""
+rule=""
+fileName=""
+listeners=()
+visitors=()
+treewalking=()     # listeners and visitor in proper order
+treewalkingtype=() # v: visitor, l: listener
+delimiter=""
+interactiveVar=""
+interactiveDelimiter=""
+interactiveNext=""
+nextExtraText=""
+interactive="false"
+lineInteractive="false"
+separatorInteractive="false"
+forceCreation="false"
+
+version=`antlr4 | head -1 | sed 's/.\+Version //1' | sed 's/\.//2'`
+if (( `echo $version*100 | bc -l | sed 's/\.0\+$//1'` < 470 )); then
+   oldversion=1
+else
+   oldversion=0
+fi
+
+while (( $# > 0 )); do
+   arg="$1"
+   case "$arg" in
+      -v | -visitor)
+         shift
+         if (( $# == 0 )); then
+            echo -e "ERROR: missing visitor file name!"
+            exit 2
+         fi
+         visitorFile=(`echo $1 | sed 's/.java$//1'`)
+         visitors+=$visitorFile
+         visitorFile=${visitorFile}.java
+         treewalking+=(`echo $1 | sed 's/.java$//1'`)
+         treewalkingtype+=("v")
+         if [[ $forceCreation == "false" ]]; then
+            if ! [ -e $visitorFile ]; then
+               echo "ERROR: visitor file $visitorFile not found"
+               exit 3
+            fi
+         fi
+         ;;
+      -l | -listener)
+         shift
+         if (( $# == 0 )); then
+            echo -e "ERROR: missing listener file name!"
+            exit 4
+         fi
+         listenerFile=(`echo $1 | sed 's/.java$//1'`)
+         listeners+=$listenerFile
+         listenerFile=${listenerFile}.java
+         treewalking+=(`echo $1 | sed 's/.java$//1'`)
+         treewalkingtype+=("l")
+         if [[ $forceCreation == "false" ]]; then
+            if ! [ -e $listenerFile ]; then
+               echo "ERROR: listener file $listenerFile not found"
+               exit 5
+            fi
+         fi
+         ;;
+      -i | -line-interactive)
+         delimiter=""
+         interactive="true"
+         lineInteractive="true"
+         separatorInteractive="false"
+         interactiveVar="lineText"
+         interactiveDelimiter=""
+         interactiveNext="Line"
+         nextExtraText=""
+         ;;
+      -is | -separator-interactive)
+         shift
+         if (( $# == 0 )); then
+            echo -e "ERROR: missing interactive delimiter text!"
+            exit 6
+         fi
+         delimiter=$1
+         interactive="true"
+         lineInteractive="false"
+         separatorInteractive="true"
+         interactiveVar="text"
+         interactiveDelimiter=".useDelimiter(\"${delimiter}\")"
+         interactiveNext=""
+         nextExtraText="+\"${delimiter}\""
+         ;;
+      -f | -force)
+         forceCreation="true"
+         ;;
+      *)
+         if [[ $grammar == "" ]]; then
+            grammar=(`echo $1 | sed 's/.g4$//1' | sed 's/Parser$//1'`)
+            grammarfile=${grammar}.g4
+            if ! [ -e $grammarfile ]; then
+               grammarfile=${grammar}Parser.g4
+               if [[ $forceCreation == "false" ]]; then
+                  if ! [ -e $grammarfile ]; then
+                     echo "ERROR: grammar file of $grammar not found"
+                     exit 7
+                  fi
+               fi
+            fi
+         elif [[ $rule == "" ]]; then
+            rule=$1
+            if [[ $forceCreation == "false" ]]; then
+               if (! grep -e "^.*\<$rule\>.*:" ${grammar}.g4 > /dev/null); then
+                  echo "ERROR: rule $rule not found in grammar $grammar"
+                  exit 8
+               fi
+            fi
+         else
+            echo -e "ERROR: invalid argument \"$1\"!"
+            exit 9
+         fi
+         ;;
+   esac
+   shift
+done
+
+if [[ $grammar == "" ]]; then
+   echo -e "ERROR: missing grammar name!"
+   exit 10
+fi
+
+if [[ $rule == "" ]]; then
+   echo -e "ERROR: missing rule name!"
+   exit 11
+fi
+
+fileName=${grammar}Main.java
+
+if [[ $forceCreation == "true" ]]; then
+   if [ -f $fileName ]; then
+      rm -fv ${fileName}
+   fi
+fi
+
+if [ -f $fileName ]; then
+   echo "ERROR: file \"$fileName\" already exists!"
+   exit 12
+fi
+
+echo -e "Creating \"$fileName\" for:"
+echo -e "   grammar=\"$grammar\""
+echo -e "   rule=\"$rule\""
+if (( ${#treewalking[*]} > 0 )); then
+   echo -e "   treewalking=\"${treewalking[*]}\""
+fi
+if (( ${#listeners[*]} > 0 )); then
+   echo -e "   listeners=\"${listeners[*]}\""
+fi
+if (( ${#visitors[*]} > 0 )); then
+   echo -e "   visitors=\"${visitors[*]}\""
+fi
+if [[ $lineInteractive == "true" ]]; then
+   echo -e "   line-interactive"
+fi
+if [[ $separatorInteractive == "true" ]]; then
+   echo -e "   separator-interactive (separador=\"$delimiter\")"
+fi
+
+if [[ $interactive == "true" ]]; then
+   echo "import java.util.Scanner;" >> $fileName
+fi
+echo "import org.antlr.v4.runtime.*;" >> $fileName
+echo "import org.antlr.v4.runtime.tree.*;" >> $fileName
+echo "" >> $fileName
+echo "public class ${grammar}Main {" >> $fileName
+indentval=3; indent=$(printf "%${indentval}s")
+echo "${indent}public static void main(String[] args) throws Exception {" >> $fileName
+indentval=$(echo ${indentval}+3 | bc); indent=$(printf "%${indentval}s")
+if [[ $interactive == "true" ]]; then
+   echo "${indent}Scanner sc = new Scanner(System.in)${interactiveDelimiter};" >> $fileName
+   echo "${indent}String ${interactiveVar} = null;" >> $fileName
+   echo "${indent}int num${interactiveNext} = 1;" >> $fileName
+   echo "${indent}if (sc.hasNext${interactiveNext}())" >> $fileName
+   echo "${indent}   ${interactiveVar} = sc.next${interactiveNext}()${nextExtraText};" >> $fileName
+   echo "${indent}${grammar}Parser parser = new ${grammar}Parser(null);" >> $fileName
+   echo "${indent}// replace error listener:" >> $fileName
+   echo "${indent}//parser.removeErrorListeners(); // remove ConsoleErrorListener" >> $fileName
+   echo "${indent}//parser.addErrorListener(new ErrorHandlingListener());" >> $fileName
+   if (( ${#treewalking[*]} > 0 )); then
+      if (( ${#listeners[*]} > 0 )); then
+         echo "${indent}ParseTreeWalker walker = new ParseTreeWalker();" >> $fileName
+      fi
+      for(( i=0;i<${#treewalking[*]};i++ )); do
+         if [[ ${treewalkingtype[i]} == "l" ]]; then
+            # listener
+            echo "${indent}${treewalking[i]} listener$i = new ${treewalking[i]}();" >> $fileName
+         else
+            # visitor
+            echo "${indent}${treewalking[i]} visitor$i = new ${treewalking[i]}();" >> $fileName
+         fi
+      done
+   fi
+   echo "${indent}while(${interactiveVar} != null) {" >> $fileName
+   indentval=$(echo ${indentval}+3 | bc); indent=$(printf "%${indentval}s")
+fi
+echo "${indent}// create a CharStream that reads from standard input:" >> $fileName
+if (( $oldversion == 1 )); then
+   echo -n "${indent}ANTLRInputStream input = new ANTLRInputStream(" >> $fileName
+   if [[ $interactive == "true" ]]; then
+      echo -n "${interactiveVar} + \"\\n\"" >> $fileName
+   else
+      echo -n "System.in" >> $fileName
+   fi
+   echo ");" >> $fileName
+else
+   echo -n "${indent}CharStream input = " >> $fileName
+   if [[ $interactive == "true" ]]; then
+      echo "CharStreams.fromString(${interactiveVar} + \"\\n\");" >> $fileName
+   else
+      echo "CharStreams.fromStream(System.in);" >> $fileName
+   fi
+fi
+echo "${indent}// create a lexer that feeds off of input CharStream:" >> $fileName
+echo "${indent}${grammar}Lexer lexer = new ${grammar}Lexer(input);" >> $fileName
+if [[ $interactive == "true" ]]; then
+   echo "${indent}lexer.setLine(num${interactiveNext});" >> $fileName
+   echo "${indent}lexer.setCharPositionInLine(0);" >> $fileName
+fi
+echo "${indent}// create a buffer of tokens pulled from the lexer:" >> $fileName
+echo "${indent}CommonTokenStream tokens = new CommonTokenStream(lexer);" >> $fileName
+echo "${indent}// create a parser that feeds off the tokens buffer:" >> $fileName
+if [[ $interactive == "true" ]]; then
+   echo "${indent}parser.setInputStream(tokens);" >> $fileName
+else
+   echo "${indent}${grammar}Parser parser = new ${grammar}Parser(tokens);" >> $fileName
+   echo "${indent}// replace error listener:" >> $fileName
+   echo "${indent}//parser.removeErrorListeners(); // remove ConsoleErrorListener" >> $fileName
+   echo "${indent}//parser.addErrorListener(new ErrorHandlingListener());" >> $fileName
+fi
+echo "${indent}// begin parsing at $rule rule:" >> $fileName
+echo "${indent}ParseTree tree = parser.$rule();" >> $fileName
+echo "${indent}if (parser.getNumberOfSyntaxErrors() == 0) {" >> $fileName
+echo "${indent}   // print LISP-style tree:" >> $fileName
+echo "${indent}   // System.out.println(tree.toStringTree(parser));" >> $fileName
+if (( ${#treewalking[*]} > 0 )); then
+   indentval=$(echo ${indentval}+3 | bc); indent=$(printf "%${indentval}s")
+   if [[ $interactive != "true" ]]; then
+      if (( ${#listeners[*]} > 0 )); then
+         echo "${indent}ParseTreeWalker walker = new ParseTreeWalker();" >> $fileName
+      fi
+      for(( i=0;i<${#treewalking[*]};i++ )); do
+         if [[ ${treewalkingtype[i]} == "l" ]]; then
+            # listener
+            echo "${indent}${treewalking[i]} listener$i = new ${treewalking[i]}();" >> $fileName
+         else
+            # visitor
+            echo "${indent}${treewalking[i]} visitor$i = new ${treewalking[i]}();" >> $fileName
+         fi
+      done
+   fi
+   for(( i=0;i<${#treewalking[*]};i++ )); do
+      if [[ ${treewalkingtype[i]} == "l" ]]; then
+         # listener
+         echo "${indent}walker.walk(listener$i, tree);" >> $fileName
+      else
+         # visitor
+         echo "${indent}visitor$i.visit(tree);" >> $fileName
+      fi
+   done
+   indentval=$(echo ${indentval}-3 | bc); indent=$(printf "%${indentval}s")
+fi
+echo "${indent}}" >> $fileName
+if [[ $interactive == "true" ]]; then
+   echo "${indent}if (sc.hasNext${interactiveNext}())" >> $fileName
+   echo "${indent}   ${interactiveVar} = sc.next${interactiveNext}()${nextExtraText};" >> $fileName
+   echo "${indent}else" >> $fileName
+   echo "${indent}   ${interactiveVar} = null;" >> $fileName
+   echo "${indent}num${interactiveNext}++;" >> $fileName
+   indentval=$(echo ${indentval}-3 | bc); indent=$(printf "%${indentval}s")
+   echo "${indent}}" >> $fileName
+fi
+indentval=$(echo ${indentval}-3 | bc); indent=$(printf "%${indentval}s")
+echo "${indent}}" >> $fileName
+echo "}" >> $fileName
+
+exit 0

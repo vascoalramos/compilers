@@ -1,0 +1,5 @@
+alias build=antlr4-build
+alias run=antlr4-run
+alias clean=antlr4-clean
+alias a4-test=antlr4-test
+alias main=antlr4-main

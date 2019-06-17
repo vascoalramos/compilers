@@ -1,0 +1,107 @@
+As a first step you should download all necessary files (latest versions of: antlr-4.7.*complete.jar, antlr4-bin*zip,
+and antlr4-4.7.*-javadoc.zip) to current directory (for example, to Desktop).
+
+(Note the bash executable code is marked with <bash> ... </bash> blocks.
+Naturally only the commands inside such blocks are executable.)
+
+
+=== Section 1: ANTLR4 installation ===
+
+STEP 1: Install ANTLR4
+
+Latest version of antlr-4.7.*-complete.jar required.
+
+Check java version with command:
+
+<bash>
+java -version
+</bash>
+
+(Number: 1.8* means that it is version 8 of java)
+
+
+a) Install ANTLR4 - Alternative 1 (preferable, but only works with java versions <= 8):
+(assumes that antlr4's complete jar file is in current directory)
+
+- as root (sudo) create directory /usr/java/packages/lib/ext
+
+<bash>
+sudo mkdir --parents /usr/java/packages/lib/ext
+</bash>
+
+- cp jar file (oracle java):
+
+<bash>
+file=$(ls -f antlr-4.7.*-complete.jar | sort | tail -1)
+sudo cp ${file} /usr/java/packages/lib/ext/
+</bash>
+
+- cp jar file (OpenJDK java):
+
+<bash>
+file=$(ls -f antlr-4.7.*-complete.jar | sort | tail -1)
+sudo cp ${file} /usr/lib/jvm/java-8-openjdk-*/jre/lib/ext/
+</bash>
+
+
+b) Install ANTLR4 - Alternative 2 (works with all java versions):
+
+- copy antlr-4.7.*-complete.jar to directory: /usr/local/lib/
+
+<bash>
+file=$(ls -f antlr-4.7.*-complete.jar | sort | tail -1)
+sudo cp ${file} /usr/local/lib/
+</bash>
+
+- change ~/.bashrc (or /etc/bash.bashrc, or /etc/bashrc) to define CLASSPATH and ANTLR4_PATH variables:
+
+<bash>
+file=$(ls -f antlr-4.7.*-complete.jar | sort | tail -1)
+echo "export CLASSPATH=\".:/usr/local/lib/${file}:$CLASSPATH\"" >> ~/.bashrc
+echo "export ANTLR4_PATH=\"/usr/local/lib\"" >> ~/.bashrc
+</bash>
+
+(Alternative 2 assumes bash shell. For other shells see its documentation.)
+
+
+STEP 2: Copy scripts to directory: /usr/local/bin/
+(assumes that antlr4's bin zip file is in current directory)
+
+<bash>
+file=$(ls -f antlr4-bin-v*.zip | sort | tail -1)
+unzip ${file}
+sudo mv bin/* /usr/local/bin/
+rmdir bin
+</bash>
+
+NOTE: gawk and cpp programs are required for antlr4-test script (install them if missing)
+<bash>
+sudo apt install gawk
+</bash>
+
+
+
+=== Section 2: ANTLR4 and java documentation ===
+
+
+STEP 1: Install ANTLR4 documentation
+(assumes that antlr4's javadoc zip file is in current directory)
+
+<bash>
+file=$(ls -f antlr4-4.7.*-javadoc.zip | sort | tail -1)
+sudo mkdir --parents /usr/local/doc/javadoc
+(p=$(pwd); cd /usr/local/doc/javadoc; sudo unzip ${p}/${file})
+</bash>
+
+
+STEP 2: Install Java documentation
+
+Try:
+
+<bash>
+sudo apt-get install openjdk-8-doc
+</bash>
+(if necessary/desired, replace 8 with a newer version)
+
+(Check /usr/local/bin/view-javadoc to see if all javadoc directories are correct)
+

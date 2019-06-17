@@ -1,0 +1,78 @@
+#!/bin/bash
+
+if [ -z "$ANTLR4_PATH" ]; then
+   cp=""
+else
+   cp="-cp .:`ls -f $ANTLR4_PATH/antlr-4*-complete.jar | sort | tail -1`"
+fi
+
+if [ $# -eq 1 ]; then
+   if [[ "$1" =~ "-h" ]]; then
+      java -ea $cp org.antlr.v4.gui.TestRig
+      exit 1
+   fi
+fi
+
+if [ $# -eq 0 ] || [ $# -eq 1 ] && [[ "$1" =~ "-"* ]]; then
+   if (command -v cpp >/dev/null 2>&1); then
+
+      count=`find . -name \*.g4 | sed 's/Parser.g4$\|Lexer.g4$\|.g4$//1' | uniq | wc -l`
+      if ((count == 0)); then
+         echo "ERROR: Grammar file not found!"
+         exit 1
+      elif ((count > 1)); then
+         echo "ERROR: Too many grammar files!"
+         find . -name \*.g4 -printf "   %p\n"
+         exit 1
+      fi
+      g4=`find . -name \*.g4 | sed 's/Parser.g4$\|Lexer.g4$\|.g4$//1' | uniq`
+      p=`dirname $g4 | sed 's/^\.\///1'`
+      if [[ "$p" == "." ]]; then
+        p=""
+      else
+        p=$p.
+      fi
+
+      if [ ! -e $g4.g4 ]; then
+         g4=${g4}Parser
+      fi
+
+      grammar=`cat "$g4"*.g4 | cpp 2>/dev/null | grep -wv ^# | sed 's/{/ { /g' | sed 's/}/ } /g' | tr '\n' ' ' | tr ' ' '\n' | grep -wv parser | grep -wv options | grep -v ^\;$ | grep -v ^$ | gawk 'BEGIN {incode=0;} /{/ {incode++;} /}/ {incode--;}  {if (incode == 0) print $0;}' | grep -v \} | grep -v @.* | head -2 | tail -1 | sed 's/[:;].*$//g' | grep -v ^$ | sed 's/Parser$//'`
+         rule=`cat "$g4"*.g4 | cpp 2>/dev/null | grep -wv ^# | sed 's/{/ { /g' | sed 's/}/ } /g' | tr '\n' ' ' | tr ' ' '\n' | grep -wv parser | grep -wv options | grep -v ^\;$ | grep -v ^$ | gawk 'BEGIN {incode=0;} /{/ {incode++;} /}/ {incode--;}  {if (incode == 0) print $0;}' | grep -v \} | grep -v @.* | head -3 | tail -1 | sed 's/[:;].*$//g' | grep -v ^$`
+
+      #echo "Grammar: $grammar"
+      #echo "Main rule: $rule"
+
+      if [ -z "$grammar" ]; then
+         echo "ERROR: grammar name missing!"
+         exit 1
+      fi
+      if [ -z "$rule" ]; then
+         echo "ERROR: first grammar rule missing!"
+         exit 1
+      fi
+
+      #echo "Grammar: $grammar"
+      #echo "Rule: $rule"
+      if [ $# -eq 0 ]; then
+         java -ea $cp org.antlr.v4.gui.TestRig $p$grammar $rule
+      else
+         opt=$1
+         case $1 in
+            "-t" )
+               opt="-tokens"
+               ;;
+            "-g" )
+               opt="-gui"
+               ;;
+         esac
+         java -ea $cp org.antlr.v4.gui.TestRig $p$grammar $rule $opt
+      fi
+   else
+      java -ea $cp org.antlr.v4.gui.TestRig $*
+   fi
+else
+   java -ea $cp org.antlr.v4.gui.TestRig $*
+fi 
+
+exit $?
