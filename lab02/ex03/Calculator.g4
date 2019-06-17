@@ -1,13 +1,23 @@
+/*
+ * grammar to identify and compute the result of mathematical expressions
+ */
 grammar Calculator;
 
 program: stat* EOF;
 
+/*
+ * code to identify a new entry each new entry can either be an expression or an empty line if it is
+ * an expression, its result is presented
+ */
 stat:
 	expr NEWLINE {
         System.out.println("Result: " + $expr.res);
     }
 	| NEWLINE;
 
+/*
+ * code to identify the possible expression definitions it also computes its value
+ */
 expr
 	returns[int res = 0]:
 	e1 = expr op = ('*' | '/') e2 = expr {
