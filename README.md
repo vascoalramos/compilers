@@ -21,5 +21,5 @@ Compilers | UA 2018/2019
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
 
-# Credits
+## Credits
 All bash scripts were written by my Compilers' professor [Miguel Oliveira e Silva](http://sweet.ua.pt/mos/)
