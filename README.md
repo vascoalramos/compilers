@@ -16,7 +16,7 @@ Compilers | UA 2018/2019
 * **view-javadoc:** opens javadoc on your browser
 
 ## Authors
-* **Vasco Ramos** - [BlasphemyCoder](https://github.com/BlasphemyCoder)
+* **Vasco Ramos** - [vascoalramos](https://github.com/vascoalramos)
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
