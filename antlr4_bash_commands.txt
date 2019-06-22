@@ -1,8 +1,0 @@
-antlr4          ->      compilação de gramáticas ANTLR-v4
-antlr4-test     ->      depuração de gramáticas
-antlr4-clean    ->      eliminação dos ficheiros gerados pelo ANTLR-v4
-antlr4-main     ->      geração da classe main para a gramática
-antlr4-build    ->      compila gramáticas e o código java gerado
-antlr4-run      ->      executa o compilador
-java-clean      ->      eliminação dos ficheiros binários java
-view-javadoc    ->      abre a documentação no browser de classes java
