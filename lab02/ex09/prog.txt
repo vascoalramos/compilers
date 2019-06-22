@@ -1,0 +1,5 @@
+C = {a,b,c}
+{a,b,c}+{b,d}
+{a,b,c}&{b,d}
+{a,b,c}\{b,d}
+C\C
