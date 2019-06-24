@@ -1,0 +1,3 @@
+print t1      // erro: variável t1 não definida
+print "lixo"    // ola
+print t1       // hey
