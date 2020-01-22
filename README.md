@@ -1,5 +1,6 @@
 # Compilers
-Compilers | UA 2018/2019
+
+Repository with some of the content of my practical labs of one of my classes: [Compilers](https://www.ua.pt/en/uc/12272).
 
 ## Prerequisites
 1. ANTLR-4
@@ -19,7 +20,7 @@ Compilers | UA 2018/2019
 * **Vasco Ramos** - [vascoalramos](https://github.com/vascoalramos)
 
 ## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Credits
-All bash scripts were written by my Compilers' professor [Miguel Oliveira e Silva](http://sweet.ua.pt/mos/)
+All bash scripts were written by my Compilers' professor [Miguel Oliveira e Silva](http://sweet.ua.pt/mos/).
